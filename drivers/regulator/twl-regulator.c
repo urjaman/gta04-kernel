@@ -505,6 +505,23 @@ static const struct twlreg_info TWLFIXED_INFO_##label = { \
 		}, \
 	}
 
+
+#define TWL4030_FIXED_RESOURCE(label, offset, num, turnon_delay, remap_conf) \
+static const struct twlreg_info TWLFIXED_INFO_##label = { \
+	.base = offset, \
+	.id = num, \
+	.remap = remap_conf, \
+	.desc = { \
+		.name = #label, \
+		.id = TWL4030_REG_##label, \
+		.ops = &twl4030fixed_ops, \
+		.type = REGULATOR_VOLTAGE, \
+		.owner = THIS_MODULE, \
+		.enable_time = turnon_delay, \
+		.of_map_mode = twl4030reg_map_mode, \
+		}, \
+	}
+
 /*
  * We list regulators here if systems need some level of
  * software control over them after boot.
@@ -530,6 +547,7 @@ TWL4030_FIXED_LDO(VINTDIG, 0x47, 1500, 13, 100, 0x08);
 TWL4030_FIXED_LDO(VUSB1V5, 0x71, 1500, 17, 100, 0x08);
 TWL4030_FIXED_LDO(VUSB1V8, 0x74, 1800, 18, 100, 0x08);
 TWL4030_FIXED_LDO(VUSB3V1, 0x77, 3100, 19, 150, 0x08);
+TWL4030_FIXED_RESOURCE(REGEN, 0x7f, 21, 10, 0x08); /* OD to VBAT */
 
 #define TWL_OF_MATCH(comp, family, label) \
 	{ \
@@ -564,6 +582,7 @@ static const struct of_device_id twl_of_match[] = {
 	TWLFIXED_OF_MATCH("ti,twl4030-vusb1v5", VUSB1V5),
 	TWLFIXED_OF_MATCH("ti,twl4030-vusb1v8", VUSB1V8),
 	TWLFIXED_OF_MATCH("ti,twl4030-vusb3v1", VUSB3V1),
+	TWLFIXED_OF_MATCH("ti,twl4030-regen", REGEN),
 	{},
 };
 MODULE_DEVICE_TABLE(of, twl_of_match);
