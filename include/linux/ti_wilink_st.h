@@ -27,6 +27,8 @@
 
 #include <linux/skbuff.h>
 
+struct serdev_device;
+
 /**
  * enum proto-type - The protocol on WiLink chips which share a
  *	common physical interface like UART.
@@ -157,7 +159,7 @@ struct st_data_s {
 	unsigned char	protos_registered;
 	unsigned long ll_state;
 	void *kim_data;
-	struct tty_struct *tty;
+	struct serdev_device *serdev;
 	struct work_struct work_write_wakeup;
 };
 
@@ -180,7 +182,7 @@ void st_ll_send_frame(enum proto_type, struct sk_buff *);
 void st_tx_wakeup(struct st_data_s *st_data);
 
 /* init, exit entry funcs called from KIM */
-int st_core_init(struct st_data_s **);
+int st_core_init(struct serdev_device *, struct st_data_s **);
 void st_core_exit(struct st_data_s *);
 
 /* ask for reference from KIM */
@@ -251,11 +253,11 @@ struct chip_version {
  */
 struct kim_data_s {
 	long uim_pid;
-	struct platform_device *kim_pdev;
+	struct serdev_device *kim_pdev;
 	struct completion kim_rcvd, ldisc_installed;
 	char resp_buffer[30];
 	const struct firmware *fw_entry;
-	unsigned nshutdown;
+	struct gpio_desc *nshutdown;
 	unsigned long rx_state;
 	unsigned long rx_count;
 	struct sk_buff *rx_skb;
