@@ -71,10 +71,12 @@ static inline struct twl_pwm_chip *to_twl(struct pwm_chip *chip)
 static int twl_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 			      int duty_ns, int period_ns)
 {
-	int duty_cycle = DIV_ROUND_UP(duty_ns * TWL_PWM_MAX, period_ns) + 1;
+	/* If >=512Hz requested, use the 64-step mode. */
+	int max_val = period_ns <= 1953125 ? 63 : TWL_PWM_MAX;
+	int duty_cycle = DIV_ROUND_UP(duty_ns * max_val, period_ns) + 1;
 	u8 pwm_config[2] = { 1, 0 };
 	int base, ret;
-
+	if (max_val == 63) pwm_config[0] |= 0x80;
 	/*
 	 * To configure the duty period:
 	 * On-cycle is set to 1 (the minimum allowed value)
@@ -88,7 +90,7 @@ static int twl_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 	 */
 	if (duty_cycle == 1)
 		duty_cycle = 2;
-	else if (duty_cycle > TWL_PWM_MAX)
+	else if (duty_cycle > max_val)
 		duty_cycle = 1;
 
 	base = pwm->hwpwm * 3;
