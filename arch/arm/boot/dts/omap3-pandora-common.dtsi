@@ -273,6 +273,22 @@
 		energy-full-design-microwatt-hours = <14800000>;
 		charge-full-design-microamp-hours = <4000000>;
 	};
+
+	pandora-backlight {
+		compatible = "pwm-backlight";
+		pwms = <&twl_pwm 0 1953125>; /* PWM.0 512Hz */
+		pwm-names = "pandora-backlight";
+		/* Slightly inconvenient interface. */
+		brightness-levels = <0 9 10 11 12 13 14 15 16 17 18 19
+					 20 21 22 23 24 25 26 27 28 29
+					 30 31 32 33 34 35 36 37 38 39
+					 40 41 42 43 44 45 46 47 48 49
+					 50 51 52 53 54 55 56 57 58 59
+					 60 62 64>; /* Purposeful 60, 62, 64. */
+		default-brightness-level = <54>;
+		poweron-pulse-us = <2000>;
+	};
+
 };
 
 &omap3_pmx_core {
