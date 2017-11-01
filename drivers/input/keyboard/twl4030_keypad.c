@@ -388,7 +388,7 @@ static int twl4030_kp_probe(struct platform_device *pdev)
 	kp->input		= input;
 
 	/* setup input device */
-	input->name		= "TWL4030 Keypad";
+	input->name		= "keypad";
 	input->phys		= "twl4030_keypad/input0";
 
 	input->id.bustype	= BUS_HOST;
