@@ -23,6 +23,7 @@
 #include <linux/pwm_backlight.h>
 #include <linux/regulator/consumer.h>
 #include <linux/slab.h>
+#include <linux/delay.h>
 
 struct pwm_bl_data {
 	struct pwm_device	*pwm;
@@ -30,6 +31,7 @@ struct pwm_bl_data {
 	unsigned int		period;
 	unsigned int		lth_brightness;
 	unsigned int		*levels;
+	unsigned int		poweron_pulse;
 	bool			enabled;
 	struct regulator	*power_supply;
 	struct gpio_desc	*enable_gpio;
@@ -43,12 +45,14 @@ struct pwm_bl_data {
 	void			(*exit)(struct device *);
 };
 
-static void pwm_backlight_power_on(struct pwm_bl_data *pb, int brightness)
+static void pwm_backlight_on_update(struct pwm_bl_data *pb, int duty_cycle)
 {
 	int err;
 
-	if (pb->enabled)
+	if (pb->enabled) {
+		pwm_config(pb->pwm, duty_cycle, pb->period);
 		return;
+	}
 
 	err = regulator_enable(pb->power_supply);
 	if (err < 0)
@@ -57,6 +61,13 @@ static void pwm_backlight_power_on(struct pwm_bl_data *pb, int brightness)
 	if (pb->enable_gpio)
 		gpiod_set_value_cansleep(pb->enable_gpio, 1);
 
+	if (pb->poweron_pulse) {
+		pwm_config(pb->pwm, pb->period, pb->period);
+		pwm_enable(pb->pwm);
+		usleep_range(pb->poweron_pulse, pb->poweron_pulse*2);
+	}
+
+	pwm_config(pb->pwm, duty_cycle, pb->period);
 	pwm_enable(pb->pwm);
 	pb->enabled = true;
 }
@@ -105,8 +116,7 @@ static int pwm_backlight_update_status(struct backlight_device *bl)
 
 	if (brightness > 0) {
 		duty_cycle = compute_duty_cycle(pb, brightness);
-		pwm_config(pb->pwm, duty_cycle, pb->period);
-		pwm_backlight_power_on(pb, brightness);
+		pwm_backlight_on_update(pb, duty_cycle);
 	} else
 		pwm_backlight_power_off(pb);
 
@@ -232,6 +242,7 @@ static int pwm_backlight_probe(struct platform_device *pdev)
 	struct pwm_bl_data *pb;
 	struct pwm_args pargs;
 	int ret;
+	u32 value;
 
 	if (!data) {
 		ret = pwm_backlight_parse_dt(&pdev->dev, &defdata);
@@ -272,6 +283,22 @@ static int pwm_backlight_probe(struct platform_device *pdev)
 	pb->exit = data->exit;
 	pb->dev = &pdev->dev;
 	pb->enabled = false;
+
+#ifdef CONFIG_OF
+	/* TODO: This should be part of pwm_backlight_parse_dt
+	 * but then that would need to already have the pb. */
+
+	/* Check for poweron-pulse-us */
+	if (!of_property_read_u32(node, "poweron-pulse-us", &value)) {
+		if (value > 100000) {
+			dev_warn(&pdev->dev,
+				 "huge poweron-pulse-us: %u, limited to 100ms\n",
+				 value);
+			value = 100000;
+		}
+		pb->poweron_pulse = value;
+	}
+#endif
 
 	pb->enable_gpio = devm_gpiod_get_optional(&pdev->dev, "enable",
 						  GPIOD_ASIS);
