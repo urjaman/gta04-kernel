@@ -54,6 +54,7 @@ For twl4030 regulators/LDOs
   - "ti,twl4030-vusb1v5" for VUSB1V5 LDO
   - "ti,twl4030-vusb1v8" for VUSB1V8 LDO
   - "ti,twl4030-vusb3v1" for VUSB3V1 LDO
+  - "ti,twl4030-regen" for REGEN control output
 
 Optional properties:
 - Any optional property defined in bindings/regulator/regulator.txt
