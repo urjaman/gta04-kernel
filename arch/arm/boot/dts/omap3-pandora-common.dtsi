@@ -241,18 +241,16 @@
 		vcc-supply = <&vaux2>;
 	};
 
-	/* HS USB Host VBUS supply
-	 * disabling this regulator causes current leakage, and LCD flicker
-	 * on earlier (CC) board revisions, so keep it always on */
+	/* HS USB Host VBUS supply */
 	usb_host_5v: fixed-regulator-usb_host_5v {
 		compatible = "regulator-fixed";
 		regulator-name = "usb_host_5v";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		regulator-always-on;
-		regulator-boot-on;
 		enable-active-high;
 		gpio = <&gpio6 4 GPIO_ACTIVE_HIGH>;	/* GPIO_164 */
+		vin-supply = <&regen>; /* Host VBUS fed by the 5V booster */
+		regulator-always-on; /* Until the USB has a VBUS supply defined. */
 	};
 
 	/* wg7210 (wifi+bt module) 32k clock buffer */
@@ -449,6 +447,19 @@
 
 #include "twl4030.dtsi"
 #include "twl4030_omap3.dtsi"
+
+/* Only describe REGEN on pandoras since by default it was not touched by linux and
+ * i cant test on non-pandoras. */
+
+/* On the pandora the REGEN enables the internal 5V booster, used by:
+ * Rebirth and 1Ghz: USB 5V and audio amp.
+ * on CC: those plus LCD. */
+
+&twl {
+	regen: regulator-regen {
+		compatible = "ti,twl4030-regen";
+	};
+};
 
 /* Only with this hacked twl4030 driver. */
 #define FNKEY(row, col, code) MATRIX_KEY((row + 8), col, code)
