@@ -577,7 +577,7 @@
 	regulator-max-microvolt = <2800000>;
 };
 
-/* ADS7846 and nubs and mma7455 */
+/* ADS7846 and nubs */
 &vaux4 {
 	regulator-min-microvolt = <2800000>;
 	regulator-max-microvolt = <2800000>;
@@ -602,11 +602,6 @@
 		compatible = "ti,bq27500-1";
 		reg = <0x55>;
 		monitored-battery = <&bat>;
-	};
-
-	mma7455@1d {
-		compatible = "fsl,mma7455";
-		reg = <0x1d>;
 	};
 
 	vsense-left@66 {
