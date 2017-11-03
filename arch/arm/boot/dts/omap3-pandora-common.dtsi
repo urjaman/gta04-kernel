@@ -586,6 +586,7 @@
 &vaux3 {
 	regulator-min-microvolt = <2800000>;
 	regulator-max-microvolt = <2800000>;
+	regulator-always-on;
 };
 
 /* ADS7846 and nubs */
